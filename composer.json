@@ -1,0 +1,14 @@
+{
+    "name": "obray/http",
+    "description": "obray compatible http client.",
+    "license": "MIT",
+    "homepage": "http://www.obray.net",
+    "require": {
+        "php": ">=7.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "obray\\": "src"
+        }
+    }
+}
