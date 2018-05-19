@@ -51,7 +51,7 @@ Class oHTTP
 
     public function setPostData($data)
     {
-        if($postData!==NULL) return;
+        if($data===NULL) return;
         $this->oHTTPRequest->setPostData($data);
     }
 
@@ -61,6 +61,7 @@ Class oHTTP
         $this->setPostData($postData);
 
         // connect and send request
+        print_r($this->protocol."://".$this->oHTTPRequest->getHost().":".$this->port);
         $socket = stream_socket_client($this->protocol."://".$this->oHTTPRequest->getHost().":".$this->port, $errno, $errstr, 30);
         stream_set_blocking($socket, false);
         if (!$socket) throw new \Exception("$errstr ($errno)");
@@ -78,6 +79,7 @@ Class oHTTP
         // read body and apply to response object
         $body = $this->readBody($socket,$this->oHTTPResponse->getTransferEncoding());
         $this->oHTTPResponse->setRawBody($body);
+
         // close connection
         fclose($socket);
         // return response
@@ -115,7 +117,8 @@ Class oHTTP
         return $res;
     }
 
-    private function fReadStream($socket,$length,$end=NULL,$timeout=30){
+    private function fReadStream($socket,$length,$end=NULL,$timeout=30)
+    {    
         $response = ''; 
         $start = microtime(TRUE);
         $endSequence = $end;

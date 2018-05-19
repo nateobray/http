@@ -12,6 +12,7 @@ Class oHTTPRequest
     protected $version;
     protected $headers = [];
     protected $data = '';
+    protected $files = [];
 
     public function __construct($method, $host, $path, $query=NULL, $version='1.1')
     {
@@ -25,7 +26,7 @@ Class oHTTPRequest
     public function setPostData($data)
     {
         if(empty($this->headers["Content-Type"]) ){
-            $this->validatePostData();
+            $this->validatePostData($data);
         }
 
         if(empty($this->headers["Content-Type"]) ){
@@ -89,7 +90,7 @@ Class oHTTPRequest
         return true;
     }
 
-    public function validatePostData()
+    public function validatePostData($data)
     {
         if(in_array(gettype($data),['string','double','integer','boolean'])){
             $this->headers["Content-Type"] = 'text/plain';
@@ -109,7 +110,7 @@ Class oHTTPRequest
         $request .= "Host: " . $this->host . "\r\n";
         
         // if no headers return request
-        if(empty($this->headers)){ return "\r\n" . $request;
+        if(empty($this->headers)) return $request . "\r\n";
         
         // write headers to request
         forEach($this->headers as $key => $value){
@@ -117,7 +118,7 @@ Class oHTTPRequest
         }
 
         // return request
-        return "\r\n" . $request . $this->data;
+        return $request . "\r\n" . $this->data;
     }
 
     public function getMethod()
