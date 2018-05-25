@@ -14,10 +14,12 @@ Class oHTTPRequest
     protected $data = '';
     protected $files = [];
 
-    public function __construct($method, $host, $path, $query=NULL, $version='1.1')
+    public function __construct($method, $scheme, $host, $port, $path, $query=NULL, $version='1.1')
     {
         $this->method = $method;
+        $this->scheme = $scheme;
         $this->host = $host;
+        $this->port = $port;
         $this->path = $path;
         $this->query = !empty($query)?('?'.$query):'';
         $this->version = $version;
@@ -25,6 +27,7 @@ Class oHTTPRequest
 
     public function setPostData($data)
     {
+        //$this->headers["Transfer-Encoding"] = 'chunked';
         if(empty($this->headers["Content-Type"]) ){
             $this->validatePostData($data);
         }
@@ -32,7 +35,7 @@ Class oHTTPRequest
         if(empty($this->headers["Content-Type"]) ){
             throw new \Exception("Unable to determine Content-Type, please specify in your header data.", 500);
         }
-
+        
         if(strpos($this->headers['Content-Type'],"multipart/form-data")!==false){
             $this->prepareMultipartFormData($data);
             return true;
@@ -55,11 +58,10 @@ Class oHTTPRequest
         )
         {
             $this->data = $data;
+            $this->headers["Content-Length"] = strlen($data);
             return true;
         }
-
         throw new \Exception("Unable to convert post data to string.", 500);
-        
     }
 
     private function prepareURLEncodedData($data)
@@ -69,6 +71,7 @@ Class oHTTPRequest
             $this->data["data"] = $data;
         }
         $this->data = http_build_query($this->data);
+        $this->headers["Content-Length"] = strlen($this->data);
         return true;
     }
 
@@ -77,17 +80,42 @@ Class oHTTPRequest
         if(in_array(gettype($data),['string','double','integer','boolean'])){
             $data["data"] = $data;
         }
+
         if(in_array(gettype($data),['object'])){
             $data = (array)$data;
         }
-        $this->data = '';
+
+        $this->data = "";
         forEach($data as $name => $value){
-            $this->data .= "--boundary\r\n";
+            if(in_array(gettype($value),['object','array'])) {
+                $this->expandArrayOrObject($name, $value);
+                continue;
+            }
+            $this->data .= "--".$this->boundary."\r\n";
             $this->data .= 'Content-Disposition: form-data; name="'.$name.'"'."\r\n";
             $this->data .= "\r\n";
             $this->data .= $value . "\r\n";
         }
+
+        $this->data .= "\r\n--".$this->boundary."--\r\n";
+        $this->headers["Content-Length"] = strlen($this->data);
         return true;
+    }
+
+    private function expandArrayOrObject($name, $data)
+    {
+        $boundary = md5(rand());
+        
+        forEach($data as $key => $value){
+            if(in_array(gettype($value),['object','array'])) {
+                $this->expandArrayOrObject($name.'['.$key.']', $value);
+                continue;
+            }
+            $this->data .= "\r\n--".$this->boundary."\r\n";
+            $this->data .= 'Content-Disposition: form-data; name="'.$name.'['.$key.']"'."\r\n";
+            $this->data .= "\r\n";
+            $this->data .= $value;
+        }
     }
 
     public function validatePostData($data)
@@ -96,7 +124,8 @@ Class oHTTPRequest
             $this->headers["Content-Type"] = 'text/plain';
         }
         if(in_array(gettype($data),['array','object'])){
-            $this->headers["Content-Type"] = 'multipart/form-data;boundary="boundary"';
+            $this->boundary = md5(rand());
+            $this->headers["Content-Type"] = 'multipart/form-data; boundary='.$this->boundary.'';
         }
         if(in_array(gettype($data),['resource','resource (closed)','NULL','unknown type'])){
             throw new \Exception("Unable to post this type of data");
@@ -121,9 +150,22 @@ Class oHTTPRequest
         return $request . "\r\n" . $this->data;
     }
 
+    public function chunkEncode($data)
+    {
+        $length = strlen($data);
+        $hex = dechex($length);
+        $data = $hex . "\r\n" . $data . "\r\n0\r\n";
+        return $data;
+    }
+
     public function getMethod()
     {
         return $this->method;
+    }
+
+    public function getScheme()
+    {
+        return $this->scheme;
     }
 
     public function getHost()

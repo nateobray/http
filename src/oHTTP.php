@@ -14,39 +14,42 @@ Class oHTTP
     const OPTIONS = 'OPTIONS';
     const TRACE = 'TRACE';
     
-    protected $url;
-    protected $scheme = 'http';
-    protected $components = array();
-    protected $method = 'GET';
-    protected $port = 80;
-    protected $protocol = 'tcp';
-    
+    protected $requests = [];
+    protected $callbacks = [];
+    protected $responses = [];
 
-    public function __construct($url, $method=oHTTP::GET, $headers=[])
+    public function addRequest($url, $method=GET, $data=NULL, $headers=[], $callback=NULL)
     {
-        $this->url = $url;
+        // parse url components
         $components = parse_url($url);
-        
+
         // parse host
         if(empty($components["host"])){
             throw new \Exception("No host specified",500);
         }
         $host = $components["host"];
-        
+
         // parse scheme
         if(empty($components['scheme']) || ($components['scheme'] !== 'https' && $components['scheme'] !== 'http')){
             throw new \Exception("Invalid scheme: only http or https is supported.",500);
         }
-        $this->scheme = $components["scheme"];
-        $this->port = $this->scheme==='http'?80:443;
-        $this->protocol = $this->scheme==='http'?'tcp':'ssl';
+        $scheme = $components["scheme"];
+        $port = $scheme==='http'?80:443;
 
         // path
         $path = !empty($components['path'])?$components['path']:'/';
+
+        //query
         $query = !empty($components['query'])?$components['query']:NULL;
 
-        $this->oHTTPRequest = new \obray\oHTTPRequest($method, $host, $path, $query, '1.1');
-        $this->oHTTPRequest->setHeaders($headers);
+        // create request
+        $request = new \obray\oHTTPRequest($method, $scheme, $host, $port, $path, $query, '1.1');
+        $request->setHeaders($headers);
+        if($data!==NULL){
+            $request->setPostData($data);
+        }
+        $this->callbacks[] = $callback;
+        $this->requests[] = $request;
     }
 
     public function setPostData($data)
@@ -55,35 +58,43 @@ Class oHTTP
         $this->oHTTPRequest->setPostData($data);
     }
 
-    public function send($postData=NULL)
+    public function send()
     {
-        // handle post data
-        $this->setPostData($postData);
-
-        // connect and send request
-        print_r($this->protocol."://".$this->oHTTPRequest->getHost().":".$this->port);
-        $socket = stream_socket_client($this->protocol."://".$this->oHTTPRequest->getHost().":".$this->port, $errno, $errstr, 30);
-        stream_set_blocking($socket, false);
-        if (!$socket) throw new \Exception("$errstr ($errno)");
-        if(fwrite($socket, $this->oHTTPRequest)===false){
-            throw new \Exception("Unable to send request.",500);
-        }
-
-        // create response object
-        $this->oHTTPResponse = new \obray\oHTTPResponse();
+        $responses = [];
+        forEach($this->requests as $index => $request){
+            // connect and send request
+            $socket = stream_socket_client(($request->getScheme()==='http'?'tcp':'ssl') . "://" . $request->getHost() . ":" . $request->port, $errno, $errstr, 30);
+            stream_set_blocking($socket, false);
+            if (!$socket) throw new \Exception("$errstr ($errno)");
+            echo $request;
+            if(fwrite($socket, $request)===false){
+                throw new \Exception("Unable to send request.",500);
+            }
         
-        // read header and apply to response object
-        $header = $this->readHeader($socket);
-        $this->oHTTPResponse->setRawHeader($header);
+            // create response object
+            $oHTTPResponse = new \obray\oHTTPResponse();
+            
+            // read header and apply to response object
+            $header = $this->readHeader($socket);
+            $oHTTPResponse->setRawHeader($header);
 
-        // read body and apply to response object
-        $body = $this->readBody($socket,$this->oHTTPResponse->getTransferEncoding());
-        $this->oHTTPResponse->setRawBody($body);
+            // read body and apply to response object
+            $body = $this->readBody($socket,$oHTTPResponse->getTransferEncoding());
+            $oHTTPResponse->setRawBody($body);
 
-        // close connection
-        fclose($socket);
+            // check if we have a valid callback
+            if( is_callable($this->callbacks[$index]) ){
+                ($this->callbacks[$index])($oHTTPResponse);
+            }
+
+            // store response
+            $responses[] = $oHTTPResponse;
+
+            // close connection
+            fclose($socket);
+        }
         // return response
-        return $this->oHTTPResponse;
+        return $responses;
     }
 
     public function getRequest()
@@ -108,11 +119,13 @@ Class oHTTP
     }
 
     private function decodeChunkedData($data){
+        print_r("----- data ----\n");
+        print_r($data);
         for ($res = ''; !empty($data); $data = trim($data)) {
             $posOfLen = strpos($data, "\r\n");
             $lengthOfChunk = hexdec(substr($data, 0, $posOfLen));
-            $res .= substr($data, $posOfLen + 2, $lengthOfChunk);
-            $data = substr($data, $posOfLen + 2 + $lengthOfChunk);
+            $res .= substr($data, $posOfLen + 2, (int)$lengthOfChunk);
+            $data = substr($data, $posOfLen + 2 + (int)$lengthOfChunk);
         }
         return $res;
     }
