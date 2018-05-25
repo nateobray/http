@@ -10,7 +10,7 @@ Class oHTTPRequest
     protected $path;
     protected $query;
     protected $version;
-    protected $headers = [];
+    protected $headers;
     protected $data = '';
     protected $files = [];
 
@@ -23,25 +23,26 @@ Class oHTTPRequest
         $this->path = $path;
         $this->query = !empty($query)?('?'.$query):'';
         $this->version = $version;
+        $this->headers = new \obray\oHTTPHeaders();
     }
 
     public function setPostData($data)
     {
         //$this->headers["Transfer-Encoding"] = 'chunked';
-        if(empty($this->headers["Content-Type"]) ){
+        if(empty($this->headers->get("Content-Type"))){
             $this->validatePostData($data);
         }
 
-        if(empty($this->headers["Content-Type"]) ){
+        if(empty($this->headers->get("Content-Type"))){
             throw new \Exception("Unable to determine Content-Type, please specify in your header data.", 500);
         }
         
-        if(strpos($this->headers['Content-Type'],"multipart/form-data")!==false){
+        if(strpos($this->headers->get('Content-Type'),"multipart/form-data")!==false){
             $this->prepareMultipartFormData($data);
             return true;
         }
 
-        if(strpos($this->headers['Content-Type'],"application/x-www-form-urlencoded")!==false){
+        if(strpos($this->headers->get('Content-Type'),"application/x-www-form-urlencoded")!==false){
             $this->prepareURLEncodedData($data);
             return true;
         }
@@ -58,7 +59,7 @@ Class oHTTPRequest
         )
         {
             $this->data = $data;
-            $this->headers["Content-Length"] = strlen($data);
+            $this->headers->set("Content-Length",strlen($data));
             return true;
         }
         throw new \Exception("Unable to convert post data to string.", 500);
@@ -71,7 +72,7 @@ Class oHTTPRequest
             $this->data["data"] = $data;
         }
         $this->data = http_build_query($this->data);
-        $this->headers["Content-Length"] = strlen($this->data);
+        $this->headers->set("Content-Length", strlen($this->data));
         return true;
     }
 
@@ -98,7 +99,7 @@ Class oHTTPRequest
         }
 
         $this->data .= "\r\n--".$this->boundary."--\r\n";
-        $this->headers["Content-Length"] = strlen($this->data);
+        $this->headers->set("Content-Length", strlen($this->data));
         return true;
     }
 
@@ -121,11 +122,11 @@ Class oHTTPRequest
     public function validatePostData($data)
     {
         if(in_array(gettype($data),['string','double','integer','boolean'])){
-            $this->headers["Content-Type"] = 'text/plain';
+            $this->headers->set("Content-Type", "text/plain");
         }
         if(in_array(gettype($data),['array','object'])){
             $this->boundary = md5(rand());
-            $this->headers["Content-Type"] = 'multipart/form-data; boundary='.$this->boundary.'';
+            $this->headers->set("Content-Type","multipart/form-data; boundary=".$this->boundary."");
         }
         if(in_array(gettype($data),['resource','resource (closed)','NULL','unknown type'])){
             throw new \Exception("Unable to post this type of data");
@@ -137,14 +138,12 @@ Class oHTTPRequest
         // write beginning line
         $request  = $this->method. ' ' . $this->path . $this->query . ' HTTP/' . $this->version . "\r\n";
         $request .= "Host: " . $this->host . "\r\n";
-        
+
         // if no headers return request
-        if(empty($this->headers)) return $request . "\r\n";
+        if(empty($this->headers->get())) return $request . "\r\n";
         
         // write headers to request
-        forEach($this->headers as $key => $value){
-            $request .= $key . ": " . $value . "\r\n";
-        }
+        $request .= $this->headers . "\r\n";
 
         // return request
         return $request . "\r\n" . $this->data;
@@ -185,7 +184,7 @@ Class oHTTPRequest
 
     public function setHeaders($headers)
     {
-        $this->headers = $headers;
+        if(is_array($headers)) $this->headers->set($headers);
     }
 
 }

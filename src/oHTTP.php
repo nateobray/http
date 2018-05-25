@@ -66,7 +66,6 @@ Class oHTTP
             $socket = stream_socket_client(($request->getScheme()==='http'?'tcp':'ssl') . "://" . $request->getHost() . ":" . $request->port, $errno, $errstr, 30);
             stream_set_blocking($socket, false);
             if (!$socket) throw new \Exception("$errstr ($errno)");
-            echo $request;
             if(fwrite($socket, $request)===false){
                 throw new \Exception("Unable to send request.",500);
             }
@@ -119,8 +118,6 @@ Class oHTTP
     }
 
     private function decodeChunkedData($data){
-        print_r("----- data ----\n");
-        print_r($data);
         for ($res = ''; !empty($data); $data = trim($data)) {
             $posOfLen = strpos($data, "\r\n");
             $lengthOfChunk = hexdec(substr($data, 0, $posOfLen));
