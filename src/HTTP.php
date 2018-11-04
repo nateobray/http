@@ -2,7 +2,7 @@
 
 namespace obray;
 
-Class oHTTP
+Class HTTP
 {
 
     const GET = 'GET';
@@ -43,7 +43,7 @@ Class oHTTP
         $query = !empty($components['query'])?$components['query']:NULL;
 
         // create request
-        $request = new \obray\oHTTPRequest($method, $scheme, $host, $port, $path, $query, '1.1');
+        $request = new \obray\HTTPRequest($method, $scheme, $host, $port, $path, $query, '1.1');
         $request->setHeaders($headers);
         if($data!==NULL){
             $request->setPostData($data);
@@ -55,7 +55,7 @@ Class oHTTP
     public function setPostData($data)
     {
         if($data===NULL) return;
-        $this->oHTTPRequest->setPostData($data);
+        $this->HTTPRequest->setPostData($data);
     }
 
     public function send()
@@ -71,23 +71,23 @@ Class oHTTP
             }
         
             // create response object
-            $oHTTPResponse = new \obray\oHTTPResponse();
+            $HTTPResponse = new \obray\HTTPResponse();
             
             // read header and apply to response object
             $header = $this->readHeader($socket);
-            $oHTTPResponse->setRawHeader($header);
+            $HTTPResponse->setRawHeader($header);
 
             // read body and apply to response object
-            $body = $this->readBody($socket,$oHTTPResponse->getTransferEncoding());
-            $oHTTPResponse->setRawBody($body);
+            $body = $this->readBody($socket,$HTTPResponse->getTransferEncoding());
+            $HTTPResponse->setRawBody($body);
 
             // check if we have a valid callback
             if( is_callable($this->callbacks[$index]) ){
-                ($this->callbacks[$index])($oHTTPResponse);
+                ($this->callbacks[$index])($HTTPResponse);
             }
 
             // store response
-            $responses[] = $oHTTPResponse;
+            $responses[] = $HTTPResponse;
 
             // close connection
             fclose($socket);
@@ -98,7 +98,7 @@ Class oHTTP
 
     public function getRequest()
     {
-        return $this->oHTTPRequest;
+        return $this->HTTPRequest;
     }
 
     private function readHeader($socket)

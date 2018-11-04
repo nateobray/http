@@ -2,7 +2,7 @@
 
 namespace obray;
 
-Class oHTTPMessageBody
+Class HTTPMessageBody
 {
     
 }

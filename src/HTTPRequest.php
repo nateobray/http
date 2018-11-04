@@ -2,7 +2,7 @@
 
 namespace obray;
 
-Class oHTTPRequest
+Class HTTPRequest
 {
     
     protected $method;
@@ -23,7 +23,7 @@ Class oHTTPRequest
         $this->path = $path;
         $this->query = !empty($query)?('?'.$query):'';
         $this->version = $version;
-        $this->headers = new \obray\oHTTPHeaders();
+        $this->headers = new \obray\HTTPHeaders();
     }
 
     public function setPostData($data)

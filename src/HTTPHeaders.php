@@ -2,7 +2,7 @@
 
 namespace obray;
 
-Class oHTTPHeaders
+Class HTTPHeaders
 {
     protected $headers = [];
 

@@ -2,7 +2,7 @@
 
 namespace obray;
 
-Class oHTTPResponse
+Class HTTPResponse
 {
     protected $rawHeader;
     protected $rawBody;
