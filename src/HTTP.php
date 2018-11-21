@@ -35,7 +35,10 @@ Class HTTP
         }
         $scheme = $components["scheme"];
         $port = $scheme==='http'?80:443;
-
+        if(!empty($components["port"])){
+            $port = $components["port"];
+        }
+        
         // path
         $path = !empty($components['path'])?$components['path']:'/';
 
@@ -43,7 +46,7 @@ Class HTTP
         $query = !empty($components['query'])?$components['query']:NULL;
 
         // create request
-        $request = new \obray\HTTPRequest($method, $scheme, $host, $port, $path, $query, '1.1');
+        $request = new \obray\HTTPRequest($method, $scheme, $host, $port, $path, $query, '1.1'); 
         $request->setHeaders($headers);
         if($data!==NULL){
             $request->setPostData($data);
@@ -96,9 +99,9 @@ Class HTTP
         return $responses;
     }
 
-    public function getRequest()
+    public function getRequests()
     {
-        return $this->HTTPRequest;
+        return $this->requests;
     }
 
     private function readHeader($socket)
@@ -113,7 +116,9 @@ Class HTTP
         }
         $end = "\r\n0\r\n";
         $chunkedData = $this->fReadStream($socket,1024*1000,$end);
-        $decodedBody = $this->decodeChunkedData($chunkedData);
+        $decodedBody = $chunkedData;
+        //print_r($chunkedData);
+        //$decodedBody = $this->decodeChunkedData($chunkedData);
         return $decodedBody;
     }
 
@@ -154,7 +159,7 @@ Class HTTP
                 return rtrim($response,$end);
             }
         }
-        return $request;
+        return $response;
     }
 
 }

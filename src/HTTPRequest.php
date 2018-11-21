@@ -29,10 +29,12 @@ Class HTTPRequest
     public function setPostData($data)
     {
         //$this->headers["Transfer-Encoding"] = 'chunked';
-        if(empty($this->headers->get("Content-Type"))){
+        try{
+            $contentType = $this->headers->get("Content-Type");
+        } catch ( \Exception $e){
             $this->validatePostData($data);
         }
-
+        
         if(empty($this->headers->get("Content-Type"))){
             throw new \Exception("Unable to determine Content-Type, please specify in your header data.", 500);
         }
@@ -59,7 +61,7 @@ Class HTTPRequest
         )
         {
             $this->data = $data;
-            $this->headers->set("Content-Length",strlen($data));
+            $this->headers->set(array("Content-Length" => strlen($data)));
             return true;
         }
         throw new \Exception("Unable to convert post data to string.", 500);
@@ -122,11 +124,11 @@ Class HTTPRequest
     public function validatePostData($data)
     {
         if(in_array(gettype($data),['string','double','integer','boolean'])){
-            $this->headers->set("Content-Type", "text/plain");
+            $this->headers->set(array("Content-Type" => "text/plain"));
         }
         if(in_array(gettype($data),['array','object'])){
             $this->boundary = md5(rand());
-            $this->headers->set("Content-Type","multipart/form-data; boundary=".$this->boundary."");
+            $this->headers->set(array("Content-Type" => "multipart/form-data; boundary=".$this->boundary.""));
         }
         if(in_array(gettype($data),['resource','resource (closed)','NULL','unknown type'])){
             throw new \Exception("Unable to post this type of data");
@@ -143,7 +145,7 @@ Class HTTPRequest
         if(empty($this->headers->get())) return $request . "\r\n";
         
         // write headers to request
-        $request .= $this->headers . "\r\n";
+        $request .= $this->headers;
 
         // return request
         return $request . "\r\n" . $this->data;

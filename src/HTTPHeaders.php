@@ -52,7 +52,7 @@ Class HTTPHeaders
      */
     public function set(array $headers): void
     {
-        $this->headers = $headers;
+        $this->headers = array_merge($headers, $this->headers);
     }
 
     /**
@@ -90,7 +90,7 @@ Class HTTPHeaders
     {
         $headerString = '';
         forEach($this->headers as $key => $value){
-            $headerString .= $key . ': ' . $value;
+            $headerString .= $key . ': ' . $value . "\r\n";
         }
         return $headerString;
     }

@@ -45,6 +45,21 @@ Class HTTPResponse
         return !empty($this->headers['Transfer-Encoding'])?$this->headers['Transfer-Encoding']:'chunked';
     }
 
+    public function getStatusCode()
+    {
+        return $this->status;
+    }
+
+    public function getStatusDescription()
+    {
+        return $this->statusDescription;
+    }
+
+    public function getVersion()
+    {
+        return $this->version;
+    }
+
     private function parseHeader()
     {
         $headerLines = explode("\r\n",$this->rawHeader);
@@ -55,12 +70,14 @@ Class HTTPResponse
 
     private function parseBeginningLine($beginningLine)
     {
-        $lines = explode(" ",$beginningLine);
-        $scheme = explode("/",$lines[0]);
-        $this->scheme = $scheme[0];
-        $this->version = $scheme[1];
-        $this->status = $lines[1];
-        $this->statusDescription = $lines[2];
+        if( !empty($beginningLine) ){
+            $lines = explode(" ",$beginningLine);
+            $scheme = explode("/",$lines[0]);
+            $this->scheme = $scheme[0];
+            $this->version = $scheme[1];
+            $this->status = $lines[1];
+            $this->statusDescription = $lines[2];
+        }
     }
 
     private function parseHeaderLines($headerLines)
