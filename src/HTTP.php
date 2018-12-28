@@ -17,6 +17,7 @@ Class HTTP
     protected $requests = [];
     protected $callbacks = [];
     protected $responses = [];
+    private $schemePortMap = array('http'=>80, 'https'=>443, 'ipp'=>631, 'ipps'=>443); 
 
     public function addRequest($url, $method=GET, $data=NULL, $headers=[], $callback=NULL)
     {
@@ -28,13 +29,14 @@ Class HTTP
             throw new \Exception("No host specified",500);
         }
         $host = $components["host"];
-
+		
         // parse scheme
-        if(empty($components['scheme']) || ($components['scheme'] !== 'https' && $components['scheme'] !== 'http')){
+        if(empty($components['scheme']) || empty($this->schemePortMap[$components['scheme']])){
             throw new \Exception("Invalid scheme: only http or https is supported.",500);
         }
+        
         $scheme = $components["scheme"];
-        $port = $scheme==='http'?80:443;
+        $port = $this->schemePortMap[$scheme];
         if(!empty($components["port"])){
             $port = $components["port"];
         }
@@ -44,7 +46,7 @@ Class HTTP
 
         //query
         $query = !empty($components['query'])?$components['query']:NULL;
-
+		
         // create request
         $request = new \obray\HTTPRequest($method, $scheme, $host, $port, $path, $query, '1.1'); 
         $request->setHeaders($headers);
@@ -66,7 +68,7 @@ Class HTTP
         $responses = [];
         forEach($this->requests as $index => $request){
             // connect and send request
-            $socket = stream_socket_client(($request->getScheme()==='http'?'tcp':'ssl') . "://" . $request->getHost() . ":" . $request->port, $errno, $errstr, 30);
+            $socket = stream_socket_client(($request->port===443?'ssl':'tcp') . "://" . $request->getHost() . ":" . $request->port, $errno, $errstr, 30);
             stream_set_blocking($socket, false);
             if (!$socket) throw new \Exception("$errstr ($errno)");
             if(fwrite($socket, $request)===false){
