@@ -15,9 +15,11 @@ class Headers
      * Build out all available headers
      */
 
-    public function __construct()
+    public function __construct(array $headers=[])
     {
-        
+        forEach($headers as $key => $value){
+            $this->addHeader(new \obray\http\Header($key, $value));
+        }
     }
 
     public function addHeader(\obray\http\Header $header)

@@ -7,13 +7,14 @@ class Transport
     private $method;
     private $uri;
     private $version;
+    private $status;
 
     private $headers;
     private $body;
 
     private $isComplete = false;
     
-    public function __construct(string $method, string $uri, string $version, \obray\http\Headers $headers=null)
+    public function __construct(string $method='', string $uri='', string $version='HTTP/1.1', \obray\http\Headers $headers=null)
     {
         $this->method = $method;
         $this->uri = $uri;
@@ -22,7 +23,10 @@ class Transport
 
     public function getTransferEncoding()
     {
-        return $this->headers->getTransferEncoding();
+        if(!empty($this->headers)){
+            return $this->headers->getTransferEncoding();
+        }
+        return ["identity"];
     }
 
     public function setHeaders($headers): void
@@ -43,6 +47,11 @@ class Transport
     public function isComplete()
     {
         return $this->isComplete;
+    }
+
+    public function setStatus(\obray\http\types\Status $status)
+    {
+        $this->status = $status;
     }
 
     public static function decode(string $data)
@@ -90,8 +99,14 @@ class Transport
     public function encode()
     {
         $encodedString = "";
-        $encodedString = $this->method . ' ' . $this->uri . ' ' . $this->version . "\r\n";
-        $encodedString .= $this->headers->encode();
+        if(empty($this->status)){
+            $encodedString = $this->method . ' ' . $this->uri . ' ' . $this->version . "\r\n";
+        } else {
+            $encodedString = $this->version . ' ' . $this->status->encode() . "\r\n";
+        }
+        if(!empty($this->headers)){
+            $encodedString .= $this->headers->encode();
+        }
         $encodedString .= "\r\n";
         if(!empty($this->body)){
             $encodedString .= $this->body->encode($this->getTransferEncoding());

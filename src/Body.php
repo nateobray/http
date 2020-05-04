@@ -36,7 +36,7 @@ class Body
         $this->data .= $data;
     }
 
-    public function decode(string $data, array $encodings=["identity"], \obray\http\Body &$body=null)
+    public static function decode(string $data, array $encodings=["identity"], \obray\http\Body &$body=null)
     {
         // handle chunked encoding (chunked must always be decoded first)
         if($index = array_search(\obray\http\types\TransferCoding::CHUNKED, $encodings) !== false){

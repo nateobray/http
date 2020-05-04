@@ -11,7 +11,7 @@ class Text
         $this->value = trim($value);
     }
 
-    public function decode($value)
+    public static function decode($value)
     {
         return new \obray\http\types\Text($value);
     }
