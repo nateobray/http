@@ -1,6 +1,6 @@
 {
     "name": "obray/http",
-    "description": "obray compatible http client.",
+    "description": "HTTP library",
     "license": "MIT",
     "homepage": "http://www.obray.net",
     "require": {
