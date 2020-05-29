@@ -58,7 +58,7 @@ class Status
 
     private function getLabel(string $name)
     {
-        $name = str_replace('_', ' ', $name);
+        $name = str_replace('_', ' ', strtolower($name));
         $name = ucwords($name);
         return $name;
     }
@@ -76,7 +76,7 @@ class Status
 
     public function encode(): string
     {
-        return $this->value . ' ' . $this->label;
+        return $this->value . ' ' . $this->getLabel($this->label);
     }
 
     public function __toString(): string

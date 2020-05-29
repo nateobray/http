@@ -34,6 +34,16 @@ class Transport
         $this->headers = $headers;
     }
 
+    public function getURI(): string
+    {
+        return $this->uri;
+    }
+
+    public function getMethod(): string
+    {
+        return $this->method;
+    }
+
     public function setBody($body): void
     {
         $this->body = $body;
@@ -56,6 +66,7 @@ class Transport
 
     public static function decode(string $data)
     {
+        if(empty($data)) return;
         $static = !(isset($this) && get_class($this) == __CLASS__);
 
         if($static) {
