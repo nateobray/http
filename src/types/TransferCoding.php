@@ -9,5 +9,4 @@ class TransferCoding extends \obray\http\types\Enum
     const GZIP = 'gzip';
     const COMPRESS = 'compress';
     const DEFLATE = 'deflate';
-
 }

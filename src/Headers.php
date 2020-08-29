@@ -2,9 +2,11 @@
 
 namespace obray\http;
 
-class Headers
+class Headers implements \Iterator
 {
+    private $position = 0;
     private $headers = [];
+    private $map = [];
 
     // general headers
     private $transferEncodings = [];
@@ -17,6 +19,7 @@ class Headers
 
     public function __construct(array $headers=[])
     {
+        $this->position = 0;
         forEach($headers as $key => $value){
             $this->addHeader(new \obray\http\Header($key, $value));
         }
@@ -24,8 +27,10 @@ class Headers
 
     public function addHeader(\obray\http\Header $header)
     {
-        $this->headers[] = $header;
-        switch($header->getToken()){
+        $token = $header->getToken();
+        $this->map[] = $token;
+        $this->headers[$token] = $header;
+        switch($token){
             case 'Transfer-Encoding':
                 if(empty($this->transferEncodings)){
                     $this->transferEncodings = $header->getValue()->__toArray();
@@ -71,5 +76,25 @@ class Headers
             $encodedString .= $header->encode();
         }
         return $encodedString;
+    }
+
+    public function rewind() {
+        $this->position = 0;
+    }
+
+    public function current() {
+        return $this->headers[$this->map[$this->position]];
+    }
+
+    public function key() {
+        return $this->position;
+    }
+
+    public function next() {
+        ++$this->position;
+    }
+
+    public function valid() {
+        return isset($this->map[$this->position]);
     }
 }

@@ -1,7 +1,7 @@
 <?php
 namespace obray\http\types;
 
-class MIME
+class MIME implements \obray\http\interfaces\TypeInterface
 {
     const TEXT = 'text/plain';
     const HTML = 'text/html';
@@ -30,6 +30,11 @@ class MIME
     public function __construct(string $mime=null)
     {
         $this->mime = $mime;
+    }
+
+    public function contains(string $value): bool
+    {
+        return $this->mime == $value;
     }
 
     public function getSetMimeFromExtension(string $ext): \obray\http\types\MIME

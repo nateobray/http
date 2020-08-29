@@ -33,6 +33,14 @@ class Header
         return new \obray\http\Header($token, $value);
     }
 
+    public function getClassName(): string
+    {
+        $name = str_replace("-", ' ', $this->token);
+        $name = ucwords($name);
+        $name = str_replace(" ", '', $name);
+        return $name;
+    }
+
     public static function getHeaderType($token, $value)
     {
         switch(strtolower($token)){
@@ -93,4 +101,5 @@ class Header
     {
         return $this->token . ': ' . $this->value->encode() . "\r\n";
     }
+
 }

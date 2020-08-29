@@ -34,6 +34,14 @@ class Transport
         $this->headers = $headers;
     }
 
+    public function getHeaders($key=null)
+    {
+        if($key !== null){
+            return $this->headers->getHeader($key);
+        }
+        return $this->headers;
+    }
+
     public function getURI(): string
     {
         return $this->uri;

@@ -1,13 +1,18 @@
 <?php
 namespace obray\http\types;
 
-class Enum
+class Enum implements \obray\http\interfaces\TypeInterface
 {
     protected $value;
 
     public function __construct($value)
     {
         $this->value = $value;
+    }
+
+    public function contains(string $value): bool
+    {
+        return $this->value==$value;
     }
 
     public function decode($value)

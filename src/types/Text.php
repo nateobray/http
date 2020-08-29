@@ -2,13 +2,21 @@
 
 namespace obray\http\types;
 
-class Text
+class Text implements \obray\http\interfaces\TypeInterface
 {
     private $value;
 
     public function __construct(string $value)
     {
         $this->value = trim($value);
+    }
+
+    public function contains(string $value): bool
+    {
+        if($this->value == $value){ 
+            return true;
+        }
+        return false;
     }
 
     public static function decode($value)

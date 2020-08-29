@@ -2,7 +2,7 @@
 
 namespace obray\http\types;
 
-class HeaderList
+class HeaderList implements \obray\http\interfaces\TypeInterface
 {
     private $values;
     private $delimeter = ',';
@@ -10,6 +10,14 @@ class HeaderList
     public function __construct(array $values, $delimeter=',')
     {
         $this->values = $values;
+    }
+
+    public function contains(string $value): bool
+    {
+        forEach($values as $v){
+            if($v->getValue() == $value) return true;
+        }
+        return false;
     }
 
     public function decode($data, $delimeter, $type)

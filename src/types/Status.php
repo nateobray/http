@@ -1,7 +1,7 @@
 <?php
 namespace obray\http\types;
 
-class Status
+class Status implements \obray\http\interfaces\TypeInterface
 {
     const CONTINUE = 100;
     const SWITCHING_PROTOCOLS = 101;
@@ -54,6 +54,11 @@ class Status
         $needle = array_search($value, $constants);
         $this->label = $this->fixVocab($this->getLabel($needle));
         $this->value = $value;
+    }
+
+    public function contains(string $value): bool
+    {
+        return $this->getLabel() == $value;
     }
 
     private function getLabel(string $name)
