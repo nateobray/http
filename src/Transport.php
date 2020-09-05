@@ -83,9 +83,10 @@ class Transport
             $headers = str_replace($firstLine . "\r\n", "", $data[0]);
             $firstLine = explode(" ", $firstLine);
             
-	    if(count($firstLine) !== 3){
-	        throw new \Exception("Bad Request");
-	    }
+            if(count($firstLine) !== 3){
+                throw new \Exception("Bad Request");
+            }
+            
             // create transport object
             $transport = new \obray\http\Transport($firstLine[0], $firstLine[1], $firstLine[2]);
 

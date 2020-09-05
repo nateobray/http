@@ -11,9 +11,11 @@ class MIME implements \obray\http\interfaces\TypeInterface
     const ICO = 'image/vnd.microsoft.icon';
     const GZIP = 'application/gzip';
     const JPEG = 'image/jpeg';
+    const PNG = 'image/png';
     const GIF = 'image/gif';
 
-    private $extensions = [
+    const EXTENSIONS = [
+        '/' => self::HTML,
         'txt' => self::TEXT,
         'html' => self::HTML,
         'htm' => self::HTML,
@@ -24,6 +26,7 @@ class MIME implements \obray\http\interfaces\TypeInterface
         'gz' => self::GZIP,
         'jpg' => self::JPEG,
         'jpeg' => self::JPEG,
+        'png' => self::JPEG,
         'gif' => self::GIF
     ];
 
@@ -37,14 +40,16 @@ class MIME implements \obray\http\interfaces\TypeInterface
         return $this->mime == $value;
     }
 
-    public function getSetMimeFromExtension(string $ext): \obray\http\types\MIME
+    static public function getSetMimeFromExtension(string $ext): \obray\http\types\MIME
     {
+        
         $ext = explode('.', $ext);
         $ext = $ext[count($ext)-1];
-        if(!empty($this->extensions[$ext])){
-            $this->mime = $this->extensions[$ext];
+        print_r(\obray\http\Types\MIME::EXTENSIONS[$ext]);
+        if(empty(\obray\http\Types\MIME::EXTENSIONS[$ext])){
+            throw new \Exception("Invalid MIME type");
         }
-        return $this;
+        return new \obray\http\types\MIME(\obray\http\Types\MIME::EXTENSIONS[$ext]);
     }
 
     public function __toString(): string
