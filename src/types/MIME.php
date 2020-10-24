@@ -13,6 +13,7 @@ class MIME implements \obray\http\interfaces\TypeInterface
     const JPEG = 'image/jpeg';
     const PNG = 'image/png';
     const GIF = 'image/gif';
+    const SVG = 'image/svg+xml';
 
     const EXTENSIONS = [
         '/' => self::HTML,
@@ -27,7 +28,8 @@ class MIME implements \obray\http\interfaces\TypeInterface
         'jpg' => self::JPEG,
         'jpeg' => self::JPEG,
         'png' => self::JPEG,
-        'gif' => self::GIF
+        'gif' => self::GIF,
+        'svg' => self::SVG
     ];
 
     public function __construct(string $mime=null)
