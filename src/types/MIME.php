@@ -47,7 +47,6 @@ class MIME implements \obray\http\interfaces\TypeInterface
         
         $ext = explode('.', $ext);
         $ext = $ext[count($ext)-1];
-        print_r(\obray\http\Types\MIME::EXTENSIONS[$ext]);
         if(empty(\obray\http\Types\MIME::EXTENSIONS[$ext])){
             throw new \Exception("Invalid MIME type");
         }
