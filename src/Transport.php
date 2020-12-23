@@ -15,7 +15,7 @@ class Transport
     private $isComplete = false;
 
     private $cookies;
-    private $sessions = [];
+    private $sessionIds = [];
     
     public function __construct(string $method='', string $uri='', string $version='HTTP/1.1', \obray\http\Headers $headers=null)
     {
@@ -88,7 +88,6 @@ class Transport
 
     public function addSessionCookies(array $cookies)
     {
-        print_r($cookies);
         forEach($cookies as $cookie){
             $this->setCookie($cookie);
         }
@@ -100,24 +99,23 @@ class Transport
         $this->cookies->{trim($cookie->getKey())} = $cookie;
     }
 
-    public function setSession(string $key, \obray\httpWebSocketServer\interfaces\SessionInterface $value)
+    public function setSessions(array $sessionIds)
     {
-        $this->sessions[$key] = $value;
-    }
-
-    public function getSession(string $key)
-    {
-        return $this->sessions[$key];
+        $this->sessionIds = $sessionIds;
     }
 
     public function getSessions()
     {
-        return $this->sessions;
+        return $this->sessionIds;
+    }
+
+    public function setSessionId($key, $id)
+    {
+        $this->sessionIds[$key] = $id;
     }
 
     public function refreshSession(string $key)
     {
-        print_r($this->sessions);
         $this->sessions[$key]->refresh();
     }
 
