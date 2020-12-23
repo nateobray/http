@@ -13,6 +13,9 @@ class Transport
     private $body;
 
     private $isComplete = false;
+
+    private $cookies;
+    private $sessions = [];
     
     public function __construct(string $method='', string $uri='', string $version='HTTP/1.1', \obray\http\Headers $headers=null)
     {
@@ -72,6 +75,52 @@ class Transport
         $this->status = $status;
     }
 
+    public function getCookies()
+    {
+        return $this->cookies;
+    }
+
+    public function getCookie($key)
+    {
+        if(empty($this->cookies->{$key})) return false;
+        return $this->cookies->{$key};
+    }
+
+    public function addSessionCookies(array $cookies)
+    {
+        print_r($cookies);
+        forEach($cookies as $cookie){
+            $this->setCookie($cookie);
+        }
+    }
+
+    public function setCookie(\obray\http\Cookie $cookie): void
+    {
+        if(empty($this->cookies)) $this->cookies = new \stdClass();
+        $this->cookies->{trim($cookie->getKey())} = $cookie;
+    }
+
+    public function setSession(string $key, \obray\httpWebSocketServer\interfaces\SessionInterface $value)
+    {
+        $this->sessions[$key] = $value;
+    }
+
+    public function getSession(string $key)
+    {
+        return $this->sessions[$key];
+    }
+
+    public function getSessions()
+    {
+        return $this->sessions;
+    }
+
+    public function refreshSession(string $key)
+    {
+        print_r($this->sessions);
+        $this->sessions[$key]->refresh();
+    }
+
     public static function decode(string $data)
     {
         if(empty($data)) return;
@@ -92,6 +141,15 @@ class Transport
 
             // parse headers
             $transport->setHeaders(\obray\http\Headers::decode($headers));
+
+            // process meaningful headers
+            $headers = $transport->getHeaders();
+            forEach($headers as $index => $header){
+                $className = '\obray\http\headers\\'.$header->getClassName();
+                if(class_exists($className)){
+                    $className::decode($header, $transport);
+                }
+            }
 
             // determine if we have the complete request
             $transferEncoding = $transport->getTransferEncoding();
@@ -129,6 +187,11 @@ class Transport
         }
         if(!empty($this->headers)){
             $encodedString .= $this->headers->encode();
+        }
+        if(!empty($this->cookies)){
+            forEach($this->cookies as $cookie){
+                $encodedString .= 'Set-Cookie: ' . $cookie->encode() . "\r\n";
+            }
         }
         $encodedString .= "\r\n";
         if(!empty($this->body)){
