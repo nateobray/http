@@ -44,8 +44,8 @@ class MIME implements \obray\http\interfaces\TypeInterface
 
     static public function getSetMimeFromExtension(string $ext): \obray\http\types\MIME
     {
-        
         $ext = explode('.', $ext);
+        if(count($ext) === 1) return new \obray\http\types\MIME(\obray\http\Types\MIME::EXTENSIONS['html']);
         $ext = $ext[count($ext)-1];
         if(empty(\obray\http\Types\MIME::EXTENSIONS[$ext])){
             throw new \Exception("Invalid MIME type");
