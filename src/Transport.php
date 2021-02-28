@@ -8,6 +8,7 @@ class Transport
     private $uri;
     private $version;
     private $status;
+    private $parameters = [];
 
     private $headers;
     private $body;
@@ -43,6 +44,16 @@ class Transport
             return $this->headers->getHeader($key);
         }
         return $this->headers;
+    }
+
+    public function setParameters(array $parameters)
+    {
+        $this->parameters = $parameters;
+    }
+
+    public function getParameters()
+    {
+        return $this->parameters;
     }
 
     public function getURI(): string
@@ -133,12 +144,16 @@ class Transport
             if(count($firstLine) !== 3){
                 throw new \Exception("Bad Request");
             }
-            
+
             // create transport object
             $transport = new \obray\http\Transport($firstLine[0], $firstLine[1], $firstLine[2]);
 
             // parse headers
             $transport->setHeaders(\obray\http\Headers::decode($headers));
+
+            // set parameters
+            parse_str(parse_url($firstLine[1], \PHP_URL_QUERY), $query);
+            $transport->setParameters($query);
 
             // process meaningful headers
             $headers = $transport->getHeaders();
@@ -148,20 +163,19 @@ class Transport
                     $className::decode($header, $transport);
                 }
             }
-
+            
             // determine if we have the complete request
             $transferEncoding = $transport->getTransferEncoding();
             if($transferEncoding !== \obray\http\types\TransferCoding::CHUNKED){
                 $transport->complete();
             }
-
+            
             // parse body
             if(!empty($data[1])){
                 $body = \obray\http\Body::decode($data[1], $transferEncoding);
                 $transport->setBody($body);
                 if($body->isComplete()) $transport->complete();
             }
-
             return $transport;
         }
 
