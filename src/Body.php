@@ -84,6 +84,7 @@ class Body
         if(empty($data)) {
             $data = $this->data;
         }
+        
         // encode body
         forEach($encodings as $encoding) {
             switch($encoding) {
