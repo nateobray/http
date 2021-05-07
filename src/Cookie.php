@@ -62,7 +62,6 @@ class Cookie
         if($this->sameSite) $string .= ' SameSite=' . $this->sameSite . ';';
         if(!empty($this->domain)) $string .= ' Domain=' . $this->domain . ';';
         if(!empty($this->path)) $string .= ' Path=' . $this->path . ';';
-        print_r($string . "\n");
         return $string;
     }
 

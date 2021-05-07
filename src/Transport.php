@@ -207,9 +207,6 @@ class Transport
             // parse body
             if(!empty($data[1])){
                 $length = strlen($data[1]);
-                print_r($transport->encode());
-                print_r($length);
-                
                 $body = \obray\http\Body::decode($data[1], $transferEncoding);
                 $transport->setBody($body);
                 if($body->isComplete()) $transport->complete();
