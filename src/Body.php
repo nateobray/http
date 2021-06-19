@@ -6,6 +6,7 @@ class Body
 {
     private $data = "";
     private $length = 0;
+    private $form = [];
 
     private $isComplete = false;
     private $chunks = [];
@@ -14,6 +15,15 @@ class Body
     {
         $this->data = $body;
         $this->length = strlen($body);
+    }
+
+    public function getForm(string $key=null)
+    {
+        if($key !== null){
+            if(empty($this->form[$eky])) throw new \Exception("Unable to find form data " . $key);
+            return $this->form[$key];
+        }
+        return $this->form;
     }
 
     public function mergeChunks(array $chunks)
@@ -122,5 +132,19 @@ class Body
             $data = $chunkedData;
         }
         return $data;
+    }
+
+    public function parseFormat(string $format, string $boundary='')
+    {
+        switch($format){
+            case 'multipart/form-data': 
+                $this->form = \obray\http\formats\MultipartFormData::parse($this->data, $boundary);
+            break;
+        }
+    }
+
+    public function __toString(): string
+    {
+        return $this->encode();
     }
 }

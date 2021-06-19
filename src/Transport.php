@@ -12,6 +12,8 @@ class Transport
 
     private $headers;
     private $body;
+    private $bodyFormat = '';
+    private $bodyBoundary = '';
 
     private $isComplete = false;
 
@@ -41,7 +43,12 @@ class Transport
     public function getHeaders($key=null)
     {
         if($key !== null){
-            return $this->headers->getHeader($key);
+            try {
+                return $this->headers->getHeader($key);
+            } catch (\Exception $e){
+                print_r($e->getMessage() . "\n");
+                return false;
+            }
         }
         return $this->headers;
     }
@@ -51,8 +58,17 @@ class Transport
         $this->parameters = $parameters;
     }
 
-    public function getParameters()
+    public function getParameters(string $key=null)
     {
+        if($key !== null){
+            try {
+                if(!empty($this->parameters[$key])) return $this->parameters[$key];
+                throw new \Exception("Parameter " . $key . " not found,");
+            } catch (\Exception $e){
+                print_r($e->getMessage() . "\n");
+                return false;
+            }
+        }
         return $this->parameters;
     }
 
@@ -69,6 +85,18 @@ class Transport
     public function setBody($body): void
     {
         $this->body = $body;
+        $this->body->parseFormat($this->bodyFormat, $this->bodyBoundary);
+    }
+
+    public function getBody()
+    {
+        return $this->body;
+    }
+
+    public function setBodyFormat(string $format, string $boundary='')
+    {
+        $this->bodyFormat = $format;
+        $this->bodyBoundary = $boundary;
     }
 
     public function complete()

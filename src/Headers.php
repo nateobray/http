@@ -48,7 +48,7 @@ class Headers implements \Iterator
 
     public function getHeader(string $key)
     {
-        if(!isSet($this->headers[$key]) || $this->headers[$key] === null) throw new \Exception("Header not found.");
+        if(!isSet($this->headers[$key]) || $this->headers[$key] === null) throw new \Exception("Header " . $key . " not found.");
         return $this->headers[$key];
     }
 

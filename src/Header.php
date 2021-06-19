@@ -102,4 +102,9 @@ class Header
         return $this->token . ': ' . $this->value->encode() . "\r\n";
     }
 
+    public function __toString()
+    {
+        return $this->value->encode();
+    }
+
 }
