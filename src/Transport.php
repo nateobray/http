@@ -25,6 +25,7 @@ class Transport
         $this->method = $method;
         $this->uri = $uri;
         $this->version = $version;
+        $this->headers = $headers;
     }
 
     public function getTransferEncoding()
@@ -51,6 +52,12 @@ class Transport
             }
         }
         return $this->headers;
+    }
+
+    public function addHeader(\obray\http\Header $header): void
+    {
+        if(empty($this->headers)) $this->headers = new \obray\http\Headers([]);
+        $this->headers->addHeader($header);
     }
 
     public function setParameters(array $parameters)
@@ -99,6 +106,11 @@ class Transport
         $this->bodyBoundary = $boundary;
     }
 
+    public function getBody(): \obray\http\Body
+    {
+        return $this->body;
+    }
+
     public function complete()
     {
         $this->isComplete = true;
@@ -112,6 +124,11 @@ class Transport
     public function setStatus(\obray\http\types\Status $status)
     {
         $this->status = $status;
+    }
+
+    public function getStatusCode()
+    {
+        return intVal($this->status->encode());
     }
 
     public function getCookies()
@@ -158,6 +175,23 @@ class Transport
         $this->sessions[$key]->refresh();
     }
 
+    public static function decodeProtocol(string $data): \obray\http\Transport
+    {
+        
+        $data = explode(" ", $data);
+        if(count($data) < 2) throw new \obray\exceptions\BadRequest400();
+        if(!in_array($data[0],['HTTP/1.0', 'HTTP/1.1', 'HTTP/2.0'])) c;
+        try{
+            $status = new \obray\http\types\Status(intVal($data[1]));
+        } catch(\Excetpoin $e){
+            $status = new \obray\http\types\Status(intVal($data[1]));
+        }
+        
+        $transport = new \obray\http\Transport('', '', $data[0]);
+        $transport->setStatus($status);
+        return $transport;    
+    }
+
     public static function decode(string $data)
     {
         if(empty($data)) return;
@@ -175,7 +209,7 @@ class Transport
 
             // create transport object
             $transport = new \obray\http\Transport($firstLine[0], $firstLine[1], $firstLine[2]);
-
+            
             // parse headers
             $transport->setHeaders(\obray\http\Headers::decode($headers));
 
@@ -195,11 +229,12 @@ class Transport
             // determine if we have the complete request
             $transferEncoding = $transport->getTransferEncoding();
             if($transferEncoding !== \obray\http\types\TransferCoding::CHUNKED){
-                $transport->complete();
+                //$transport->complete();
             }
-            
+
             // parse body
             if(!empty($data[1])){
+                $length = strlen($data[1]);
                 $body = \obray\http\Body::decode($data[1], $transferEncoding);
                 $transport->setBody($body);
                 if($body->isComplete()) $transport->complete();

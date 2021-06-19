@@ -2,10 +2,7 @@
 
 namespace obray\http;
 
-class Response extends \obray\http\Transport
+class Request extends \obray\http\Transport
 {
-    public function getURI()
-    {
-        return $this->uri;
-    }
+
 }
