@@ -23,6 +23,16 @@ class Header
         return $this->value;
     }
 
+    public function contains(string $value)
+    {
+        return $this->value->contains($value);
+    }
+
+    public function getPairValue(string $key2)
+    {
+        return $this->value->getPairValue($key2);
+    }
+
     public static function decode($header)
     {
         // normalize whitespace
@@ -76,6 +86,8 @@ class Header
             case 'referer':
             case 'te':
             case 'user-agent':
+            case 'cookie':
+                return \obray\http\types\HeaderList::decode($value, ';', '\obray\http\types\Text');
             // entity headers
             case 'content-encoding':
             case 'content-language':
@@ -85,7 +97,7 @@ class Header
             case 'content-md5':
             case 'content-range':
             case 'content-type':
-                return \obray\http\types\Text::decode($value);
+                return \obray\http\types\HeaderList::decode($value, ';', '\obray\http\types\Text');
             case 'expires':
             case 'last-modifiers':
             case 'extension-header':

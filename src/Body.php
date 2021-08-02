@@ -20,7 +20,7 @@ class Body
     public function getForm(string $key=null)
     {
         if($key !== null){
-            if(empty($this->form[$eky])) throw new \Exception("Unable to find form data " . $key);
+            if(empty($this->form[$key])) throw new \Exception("Unable to find form data " . $key);
             return $this->form[$key];
         }
         return $this->form;
@@ -62,7 +62,7 @@ class Body
             if($body->isComplete() === false) return $body;
             unset($encodings[$index]);
         }
-
+        
         // handle any additional encodings
         forEach($encodings as $encoding){
             switch($encoding){
@@ -84,8 +84,7 @@ class Body
         }
 
         // ensure we have a body to return
-        if(empty($body)) $body = new \obray\http\Body($data);
-
+        if(empty($body)) $body = new \obray\http\Body($data);        
         return $body;
     }
 
@@ -135,12 +134,10 @@ class Body
         return $data;
     }
 
-    public function parseFormat(string $format, string $boundary='')
+    public function parseFormat(\obray\http\Header $contentType)
     {
-        switch($format){
-            case 'multipart/form-data': 
-                $this->form = \obray\http\formats\MultipartFormData::parse($this->data, $boundary);
-            break;
+        if($contentType->contains('multipart/form-data')) {
+            $this->form = \obray\http\formats\MultipartFormData::parse($this->data, $contentType->getPairValue('boundary'));
         }
     }
 

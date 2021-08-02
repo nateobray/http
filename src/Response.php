@@ -8,6 +8,7 @@ class Response extends \obray\http\Transport
     {
         $response = new \obray\http\Transport();
         $response->setStatus(new \obray\http\types\Status($status));
+        
         $response->setHeaders(new \obray\http\Headers(array_merge([
             "Content-Length" => strlen($body),
             "Connection" => "Keep-Alive"

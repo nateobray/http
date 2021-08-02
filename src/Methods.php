@@ -12,5 +12,19 @@ class Methods
     const DELETE = 'DELETE';
     const TRACE = 'TRACE';
     const CONNECT = 'CONNECT';
+
+    public static function toArray()
+    {
+        return [
+            SELF::OPTIONS,
+            SELF::GET,
+            SELF::HEAD,
+            SELF::POST,
+            SELF::PUT,
+            SELF::DELETE,
+            SELF::TRACE,
+            SELF::CONNECT
+        ];
+    }
     
 }

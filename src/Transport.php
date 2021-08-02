@@ -19,6 +19,9 @@ class Transport
 
     private $cookies;
     private $sessionIds = [];
+
+    private $startTime = 0;
+    private $endTime = 0;
     
     public function __construct(string $method='', string $uri='', string $version='HTTP/1.1', \obray\http\Headers $headers=null)
     {
@@ -26,6 +29,17 @@ class Transport
         $this->uri = $uri;
         $this->version = $version;
         $this->headers = $headers;
+        $this->startTime();
+    }
+
+    public function startTime()
+    {
+        $this->startTime = microtime(true);
+    }
+
+    public function getDuration()
+    {
+        return (microtime(true) - $this->startTime) * 1000;
     }
 
     public function getTransferEncoding()
@@ -41,15 +55,10 @@ class Transport
         $this->headers = $headers;
     }
 
-    public function getHeaders($key=null)
+    public function getHeaders($key=null, $key2=null)
     {
         if($key !== null){
-            try {
-                return $this->headers->getHeader($key);
-            } catch (\Exception $e){
-                print_r($e->getMessage() . "\n");
-                return false;
-            }
+            return $this->headers->getHeader($key, $key2);
         }
         return $this->headers;
     }
@@ -58,6 +67,11 @@ class Transport
     {
         if(empty($this->headers)) $this->headers = new \obray\http\Headers([]);
         $this->headers->addHeader($header);
+        // process meaningful headers
+        $className = '\\obray\\http\\headers\\'.$header->getClassName();
+        if(class_exists($className)){
+            $className::decode($header, $this);
+        }
     }
 
     public function setParameters(array $parameters)
@@ -79,6 +93,11 @@ class Transport
         return $this->parameters;
     }
 
+    public function getForm(string $key=null)
+    {
+        return $this->body->getForm($key);
+    }
+
     public function getURI(): string
     {
         return $this->uri;
@@ -92,12 +111,6 @@ class Transport
     public function setBody($body): void
     {
         $this->body = $body;
-        $this->body->parseFormat($this->bodyFormat, $this->bodyBoundary);
-    }
-
-    public function getBody()
-    {
-        return $this->body;
     }
 
     public function setBodyFormat(string $format, string $boundary='')
@@ -131,56 +144,12 @@ class Transport
         return intVal($this->status->encode());
     }
 
-    public function getCookies()
-    {
-        return $this->cookies;
-    }
-
-    public function getCookie($key)
-    {
-        if(empty($this->cookies->{$key})) return false;
-        return $this->cookies->{$key};
-    }
-
-    public function addSessionCookies(array $cookies)
-    {
-        forEach($cookies as $cookie){
-            $this->setCookie($cookie);
-        }
-    }
-
-    public function setCookie(\obray\http\Cookie $cookie): void
-    {
-        if(empty($this->cookies)) $this->cookies = new \stdClass();
-        $this->cookies->{trim($cookie->getKey())} = $cookie;
-    }
-
-    public function setSessions(array $sessionIds)
-    {
-        $this->sessionIds = $sessionIds;
-    }
-
-    public function getSessions()
-    {
-        return $this->sessionIds;
-    }
-
-    public function setSessionId($key, $id)
-    {
-        $this->sessionIds[$key] = $id;
-    }
-
-    public function refreshSession(string $key)
-    {
-        $this->sessions[$key]->refresh();
-    }
-
     public static function decodeProtocol(string $data): \obray\http\Transport
     {
         
         $data = explode(" ", $data);
         if(count($data) < 2) throw new \obray\exceptions\BadRequest400();
-        if(!in_array($data[0],['HTTP/1.0', 'HTTP/1.1', 'HTTP/2.0'])) c;
+        if(!in_array($data[0],['HTTP/1.0', 'HTTP/1.1', 'HTTP/2.0'])) throw new \obray\exceptions\BadRequest400();
         try{
             $status = new \obray\http\types\Status(intVal($data[1]));
         } catch(\Excetpoin $e){
@@ -190,6 +159,22 @@ class Transport
         $transport = new \obray\http\Transport('', '', $data[0]);
         $transport->setStatus($status);
         return $transport;    
+    }
+
+    public static function decodeProtocolRequest(string $data): \obray\http\Transport
+    {
+        $data = explode(" ", $data);
+        
+        if(count($data) < 2) throw new \obray\exceptions\BadRequest400();
+        if(!in_array($data[0], \obray\http\Methods::toArray())) throw new \obray\exceptions\BadRequest400();
+        if(!in_array($data[count($data)-1], \obray\http\ProtocolVersions::toArray())) throw new \obray\exceptions\BadRequest400();
+
+        $transport = new \obray\http\Transport( trim($data[0]), (count($data)>2)?$data[1]:'', $data[count($data)-1]);
+        if((count($data)>2)){
+            parse_str(parse_url($data[1], \PHP_URL_QUERY), $query);
+            $transport->setParameters($query);
+        }
+        return $transport;
     }
 
     public static function decode(string $data)

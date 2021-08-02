@@ -46,9 +46,12 @@ class Headers implements \Iterator
         return $this->transferEncodings;
     }
 
-    public function getHeader(string $key)
+    public function getHeader(string $key, string $key2=null)
     {
         if(!isSet($this->headers[$key]) || $this->headers[$key] === null) throw new \Exception("Header " . $key . " not found.");
+        if($key2 !== null){
+            return $this->headers[$key]->getPairValue($key2);
+        }
         return $this->headers[$key];
     }
 

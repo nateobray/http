@@ -5,6 +5,7 @@ namespace obray\http\types;
 class HeaderList implements \obray\http\interfaces\TypeInterface
 {
     private $values;
+    private $properties;
     private $delimeter = ',';
 
     public function __construct(array $values, $delimeter=',')
@@ -14,18 +15,24 @@ class HeaderList implements \obray\http\interfaces\TypeInterface
 
     public function contains(string $value): bool
     {
-        forEach($values as $v){
-            if($v->getValue() == $value) return true;
+        forEach($this->values as $v){
+            if((string)$v == $value) return true;
         }
         return false;
     }
 
-    public function decode($data, $delimeter, $type)
+    public static function decode($data, $delimeter, $type)
     {
         $values = explode($delimeter, $data);
+        if(!is_array($values)) $values = array(0 => $values);
         $newValues = [];
-        forEach($values as $value){
-            $newValues[] = $type::decode($value);
+        forEach($values as $value) {
+            $pair = \obray\http\types\Pair::decode($value);
+            if($pair === false ) {
+                $newValues[] = $type::decode($value);
+            } else {
+                $newValues[] = $pair;
+            }
         }
         return new \obray\http\types\HeaderList($newValues, $delimeter);
     }
@@ -43,5 +50,15 @@ class HeaderList implements \obray\http\interfaces\TypeInterface
     public function __toArray()
     {
         return $this->values;
+    }
+
+    public function getPairValue(string $key2)
+    {
+        forEach($this->values as $value){
+            if(\get_class($value) === 'obray\http\types\Pair' && $value->hasKey($key2)){
+                return $value->getValue();
+            }
+        }
+        throw new \Exception("Could not find " . $key2 . "\n");
     }
 }
